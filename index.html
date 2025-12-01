@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задание 1: Найди подарки</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0c2461;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #fad390;
+            margin: 20px 0;
+        }
+        
+        .task-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .gifts-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 30px 0;
+            padding: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .gifts-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .gift-box {
+            width: 100%;
+            height: 100px;
+            background: #1e3799;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+        
+        .gift-box:hover {
+            transform: scale(1.05);
+            border-color: #f6b93b;
+        }
+        
+        .gift-box.found {
+            background: #78e08f;
+            transform: scale(0.9);
+        }
+        
+        .counter {
+            font-size: 1.5em;
+            margin: 20px;
+            padding: 10px 20px;
+            background: #4a69bd;
+            display: inline-block;
+            border-radius: 50px;
+        }
+        
+        button {
+            background: #e55039;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px;
+            transition: 0.3s;
+        }
+        
+        button:hover {
+            background: #fa983a;
+            transform: scale(1.1);
+        }
+        
+        button:disabled {
+            background: #777;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            font-size: 1.3em;
+            margin: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .success {
+            background: rgba(120, 224, 143, 0.3);
+            color: #78e08f;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎁 ЗАДАНИЕ 1: НАЙДИ ПОДАРКИ</h1>
+        
+        <div class="task-info">
+            <p>Дед Мороз потерял 5 подарков в снежной буре!</p>
+            <p>Нажми на все подарки, чтобы найти их.</p>
+            <p>Будь осторожен: под некоторыми коробками спрятаны сосульки!</p>
+        </div>
+        
+        <div class="counter" id="counter">
+            Найдено: <span id="found-count">0</span> из 5
+        </div>
+        
+        <div class="gifts-container" id="gifts-container">
+            <!-- Подарки будут созданы JavaScript -->
+        </div>
+        
+        <button id="check-button" onclick="checkCompletion()">
+            ПРОВЕРИТЬ ВЫПОЛНЕНИЕ
+        </button>
+        
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        // Всего нужно найти 5 подарков
+        const totalGifts = 5;
+        let foundGifts = 0;
+
+
+// Создаем 20 коробок (5 подарков и 15 сосулек)
+        function createGifts() {
+            const container = document.getElementById('gifts-container');
+            
+            // Массив: true = подарок, false = сосулька
+            const gifts = [];
+            
+            // Добавляем 5 подарков
+            for (let i = 0; i < totalGifts; i++) {
+                gifts.push(true);
+            }
+            
+            // Добавляем 15 сосулек
+            for (let i = 0; i < 15; i++) {
+                gifts.push(false);
+            }
+            
+            // Перемешиваем случайным образом
+            gifts.sort(() => Math.random() - 0.5);
+            
+            // Создаем коробки
+            gifts.forEach((isGift, index) => {
+                const giftBox = document.createElement('div');
+                giftBox.className = 'gift-box';
+                giftBox.dataset.isGift = isGift;
+                giftBox.dataset.index = index;
+                
+                // На коробке видно только знак вопроса
+                giftBox.textContent = '?';
+                
+                // При клике на коробку
+                giftBox.onclick = function() {
+                    if (this.classList.contains('found')) return;
+                    
+                    if (isGift) {
+                        // Это подарок
+                        this.textContent = '🎁';
+                        this.classList.add('found');
+                        foundGifts++;
+                        document.getElementById('found-count').textContent = foundGifts;
+                        
+                        // Звук успеха (если браузер позволяет)
+                        playSound('success');
+                    } else {
+                        // Это сосулька
+                        this.textContent = '🧊';
+                        this.style.background = '#4a69bd';
+                        
+                        // Звук ошибки
+                        playSound('error');
+                    }
+                };
+                
+                container.appendChild(giftBox);
+            });
+        }
+        
+        function playSound(type) {
+            // Простая звуковая имитация через бипы
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'success') {
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // Нота C5
+                } else {
+                    oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // Нота A3
+                }
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log("Аудио не поддерживается");
+            }
+        }
+        
+        function checkCompletion() {
+            const message = document.getElementById('message');
+            const button = document.getElementById('check-button');
+            
+            if (foundGifts === totalGifts) {
+                message.textContent = '🎉 УРА! Ты нашёл все подарки! Дед Мороз доволен!';
+                message.className = 'message success';
+                button.disabled = true;
+                button.textContent = '✅ ЗАДАНИЕ ВЫПОЛНЕНО';
+
+
+// Показываем следующее задание
+                setTimeout(() => {
+                    if (confirm('Отлично! Перейти ко второму заданию?')) {
+                        // Здесь будет переход ко второму заданию
+                        alert('Второе задание в разработке!');
+                    }
+                }, 1000);
+            } else {
+                message.textContent = Найдено только ${foundGifts} из ${totalGifts} подарков. Ищи ещё!;
+                message.className = 'message';
+                message.style.display = 'block';
+                message.style.background = 'rgba(229, 80, 57, 0.3)';
+                message.style.color = '#fad390';
+                
+                // Скрываем сообщение через 3 секунды
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', createGifts);
+    </script>
+</body>
+</html>
